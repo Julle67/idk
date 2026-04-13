@@ -1,17 +1,21 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Windows 11 Simulator</title>
   <style>
-    /* Global Styles */
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* General Reset */
+    * {
       margin: 0;
       padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       height: 100%;
-      overflow: hidden;
+      background-color: #1a1a1a;
       display: flex;
       flex-direction: column;
     }
@@ -23,8 +27,8 @@
       background-position: center;
       background-repeat: no-repeat;
       height: 100%;
-      padding: 10px;
       position: relative;
+      overflow: hidden;
     }
 
     /* Taskbar */
@@ -58,38 +62,19 @@
       background-color: #5e5e5e;
     }
 
-    /* Taskbar Icons */
-    #taskbarIcons {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-    }
-
-    .taskbar-icon {
-      margin-left: 10px;
-      padding: 10px;
-      background-color: #3e3e42;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    .taskbar-icon:hover {
-      background-color: #5f5f5f;
-    }
-
     /* Start Menu */
     #startMenu {
       background-color: #1a1a1a;
       position: absolute;
       top: 70px;
       left: 10px;
-      width: 230px;
+      width: 250px;
       padding: 15px;
       color: white;
       border-radius: 8px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      z-index: 999;
+      display: none;
+      z-index: 1000;
     }
 
     #startMenu.hidden {
@@ -110,6 +95,26 @@
 
     #startMenu button:hover {
       background-color: #2b2b2b;
+    }
+
+    /* Taskbar Icons */
+    #taskbarIcons {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .taskbar-icon {
+      margin-left: 10px;
+      padding: 10px;
+      background-color: #3e3e42;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .taskbar-icon:hover {
+      background-color: #5f5f5f;
     }
 
     /* Desktop Icons */
@@ -147,7 +152,7 @@
       opacity: 1;
     }
 
-    /* Windows (draggable, resizable) */
+    /* Window Styling */
     .window {
       width: 500px;
       height: 350px;
@@ -261,7 +266,6 @@
 
   <script>
     let windows = [];
-    let minimizedWindows = [];
 
     // Toggle Start Menu visibility
     function toggleStartMenu() {
