@@ -156,6 +156,18 @@
       cursor: nwse-resize;
     }
 
+    /* Notepad text area */
+    #notepadContent {
+      width: 100%;
+      height: 100%;
+      background-color: #f4f4f4;
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      resize: none;
+    }
+
   </style>
 </head>
 <body>
@@ -217,10 +229,40 @@
       controls.appendChild(closeButton);
       windowHeader.appendChild(controls);
 
-      // Window content
+      // Window content based on app type
       const windowContent = document.createElement('div');
       windowContent.classList.add('window-content');
-      windowContent.innerHTML = `<h3>${appName}</h3><p>This is a simple ${appName} app window.</p>`;
+
+      if (appName === 'Notepad') {
+        const textarea = document.createElement('textarea');
+        textarea.id = 'notepadContent';
+        textarea.placeholder = 'Type here...';
+        windowContent.appendChild(textarea);
+      } else if (appName === 'Calculator') {
+        windowContent.innerHTML = `
+          <h3>Calculator</h3>
+          <div>
+            <button onclick="alert('1')">1</button>
+            <button onclick="alert('2')">2</button>
+            <button onclick="alert('3')">3</button>
+          </div>
+          <div>
+            <button onclick="alert('4')">4</button>
+            <button onclick="alert('5')">5</button>
+            <button onclick="alert('6')">6</button>
+          </div>
+        `;
+      } else if (appName === 'Settings') {
+        windowContent.innerHTML = `
+          <h3>Settings</h3>
+          <p>Change theme:</p>
+          <select>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        `;
+      }
+
       window.appendChild(windowHeader);
       window.appendChild(windowContent);
 
