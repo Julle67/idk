@@ -1,186 +1,262 @@
-import tkinter as tk
-from tkinter import messagebox
-import random
-import time
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Windows 11 Simulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f0f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
 
+    #taskbar {
+      background-color: #2d2d30;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      color: white;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      z-index: 10;
+    }
 
-class WindowSimulator(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.title("Windows 11 Simulator")
-        self.geometry("1200x800")
-        self.configure(bg="lightgray")
+    #startButton {
+      background-color: #3e3e42;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 8px 12px;
+    }
 
-        self.windows = []  # Store windows to manage them later
-        self.taskbar_icons = []  # Icons for taskbar apps
+    #taskbarIcons {
+      display: flex;
+      margin-left: 20px;
+    }
 
-        # Taskbar (Bottom bar)
-        self.create_taskbar()
+    button {
+      padding: 8px 15px;
+      margin: 5px;
+      background-color: #3e3e42;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
 
-        # Start Menu Button
-        self.start_button = tk.Button(self, text="Start", command=self.toggle_start_menu, relief="flat", bg="lightgray")
-        self.start_button.place(x=10, y=740)
+    button:hover {
+      background-color: #575757;
+    }
 
-        # Start Menu
-        self.start_menu_frame = tk.Frame(self, bg="gray", width=250, height=300)
-        self.start_menu_open = False
+    #startMenu {
+      background-color: #1a1a1a;
+      position: absolute;
+      top: 45px;
+      left: 10px;
+      width: 200px;
+      padding: 10px;
+      color: white;
+      border-radius: 5px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      z-index: 20;
+    }
 
-        # Initialize window applications
-        self.apps = {
-            "Notepad": self.open_notepad,
-            "Calculator": self.open_calculator,
-            "Settings": self.open_settings
+    #startMenu.hidden {
+      display: none;
+    }
+
+    .window {
+      width: 400px;
+      height: 300px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      z-index: 5;
+    }
+
+    .window .header {
+      background-color: #3e3e42;
+      color: white;
+      padding: 10px;
+      cursor: move;
+      user-select: none;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+
+    .window .content {
+      padding: 15px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <button id="startButton" onclick="toggleStartMenu()">Start</button>
+    <div id="taskbarIcons"></div>
+  </div>
+
+  <!-- Start Menu -->
+  <div id="startMenu" class="hidden">
+    <button onclick="openApp('Notepad')">Notepad</button>
+    <button onclick="openApp('Calculator')">Calculator</button>
+    <button onclick="openApp('Settings')">Settings</button>
+  </div>
+
+  <!-- Container for windows -->
+  <div id="windowContainer"></div>
+
+  <script>
+    let windows = [];
+    let minimizedWindows = [];
+
+    // Toggle Start Menu
+    function toggleStartMenu() {
+      const startMenu = document.getElementById('startMenu');
+      startMenu.classList.toggle('hidden');
+    }
+
+    // Open an app
+    function openApp(appName) {
+      createWindow(appName);
+      toggleStartMenu();
+    }
+
+    // Create a new window
+    function createWindow(appName) {
+      const windowContainer = document.getElementById('windowContainer');
+      
+      // Create window
+      const window = document.createElement('div');
+      window.classList.add('window');
+      window.setAttribute('id', appName + 'Window');
+      
+      // Header (moveable area)
+      const header = document.createElement('div');
+      header.classList.add('header');
+      header.innerText = appName;
+      window.appendChild(header);
+
+      // Content area
+      const content = document.createElement('div');
+      content.classList.add('content');
+      content.innerHTML = `<h3>${appName} App</h3><p>This is a simple ${appName} window.</p>`;
+      window.appendChild(content);
+
+      // Add window to the container
+      windowContainer.appendChild(window);
+      
+      // Add to taskbar
+      addToTaskbar(appName, window);
+
+      // Make window draggable
+      makeWindowDraggable(window);
+
+      windows.push(window);
+    }
+
+    // Add app icon to taskbar
+    function addToTaskbar(appName, window) {
+      const taskbarIcons = document.getElementById('taskbarIcons');
+      
+      const icon = document.createElement('button');
+      icon.innerText = appName;
+      icon.onclick = function() {
+        bringWindowToFront(window);
+      };
+      taskbarIcons.appendChild(icon);
+    }
+
+    // Bring window to front
+    function bringWindowToFront(window) {
+      window.style.zIndex = windows.length + 1;
+    }
+
+    // Make window draggable
+    function makeWindowDraggable(window) {
+      const header = window.querySelector('.header');
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      header.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - window.offsetLeft;
+        offsetY = e.clientY - window.offsetTop;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          window.style.left = `${e.clientX - offsetX}px`;
+          window.style.top = `${e.clientY - offsetY}px`;
         }
+      });
 
-    def create_taskbar(self):
-        taskbar_frame = tk.Frame(self, bg="darkgray", height=40)
-        taskbar_frame.pack(side="bottom", fill="x")
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+      });
+    }
 
-        # Add taskbar icons for apps
-        self.taskbar_icons = [tk.Button(taskbar_frame, text=app, command=self.apps[app], width=10) for app in self.apps]
-        for i, button in enumerate(self.taskbar_icons):
-            button.grid(row=0, column=i)
+    // Minimize window
+    function minimizeWindow(window) {
+      const taskbarIcons = document.getElementById('taskbarIcons');
+      const icon = document.createElement('button');
+      icon.innerText = window.querySelector('.header').innerText;
+      icon.onclick = function() {
+        restoreWindow(window);
+      };
+      taskbarIcons.appendChild(icon);
+      window.style.display = 'none';
+      minimizedWindows.push(window);
+    }
 
-    def toggle_start_menu(self):
-        if self.start_menu_open:
-            self.start_menu_frame.place_forget()
-            self.start_menu_open = False
-        else:
-            self.start_menu_frame.place(x=10, y=50)
-            self.start_menu_open = True
-            # Add buttons to start menu
-            for app_name, func in self.apps.items():
-                button = tk.Button(self.start_menu_frame, text=app_name, command=func)
-                button.pack(fill="x")
+    // Restore window from taskbar
+    function restoreWindow(window) {
+      window.style.display = 'block';
+      minimizedWindows = minimizedWindows.filter(w => w !== window);
+    }
 
-    def open_notepad(self):
-        new_window = DraggableWindow(self, title="Notepad", app_type="Notepad")
-        self.windows.append(new_window)
-        new_window.show()
+    // Close window
+    function closeWindow(window) {
+      window.remove();
+      const taskbarIcons = document.getElementById('taskbarIcons');
+      taskbarIcons.querySelectorAll('button').forEach(icon => {
+        if (icon.innerText === window.querySelector('.header').innerText) {
+          icon.remove();
+        }
+      });
+    }
 
-    def open_calculator(self):
-        new_window = DraggableWindow(self, title="Calculator", app_type="Calculator")
-        self.windows.append(new_window)
-        new_window.show()
+    // Add close and minimize buttons to window
+    function addWindowControls(window) {
+      const closeButton = document.createElement('button');
+      closeButton.innerText = 'X';
+      closeButton.onclick = () => closeWindow(window);
+      window.querySelector('.header').appendChild(closeButton);
 
-    def open_settings(self):
-        new_window = DraggableWindow(self, title="Settings", app_type="Settings")
-        self.windows.append(new_window)
-        new_window.show()
+      const minimizeButton = document.createElement('button');
+      minimizeButton.innerText = '_';
+      minimizeButton.onclick = () => minimizeWindow(window);
+      window.querySelector('.header').appendChild(minimizeButton);
+    }
+  </script>
 
-
-class DraggableWindow(tk.Toplevel):
-    def __init__(self, master, title, app_type):
-        super().__init__(master)
-        self.title(title)
-        self.geometry("400x300")
-        self.configure(bg="white")
-
-        self.app_type = app_type
-        self.is_minimized = False
-
-        self.label = tk.Label(self, text=f"{title} - Window", bg="white")
-        self.label.pack(pady=10)
-
-        self.content_frame = tk.Frame(self, bg="white")
-        self.content_frame.pack(fill="both", expand=True)
-
-        if app_type == "Notepad":
-            self.create_notepad()
-        elif app_type == "Calculator":
-            self.create_calculator()
-        elif app_type == "Settings":
-            self.create_settings()
-
-        # Close, Minimize, and Resize buttons
-        self.close_button = tk.Button(self, text="X", command=self.close_window, width=3, relief="flat")
-        self.close_button.place(x=370, y=10)
-
-        self.minimize_button = tk.Button(self, text="_", command=self.minimize_window, width=3, relief="flat")
-        self.minimize_button.place(x=330, y=10)
-
-        self.bind("<ButtonPress-1>", self.start_move)
-        self.bind("<B1-Motion>", self.on_move)
-
-        self.x = 0
-        self.y = 0
-
-    def create_notepad(self):
-        text_area = tk.Text(self.content_frame, wrap="word", height=15, width=48)
-        text_area.pack(padx=10, pady=10)
-        text_area.insert(tk.END, "Welcome to the Notepad app!")
-
-    def create_calculator(self):
-        self.result_var = tk.StringVar()
-
-        def press_button(value):
-            current = self.result_var.get()
-            self.result_var.set(current + value)
-
-        def calculate_result():
-            try:
-                result = eval(self.result_var.get())
-                self.result_var.set(str(result))
-            except Exception as e:
-                messagebox.showerror("Error", "Invalid calculation")
-
-        # Display Entry
-        entry = tk.Entry(self.content_frame, textvariable=self.result_var, font=("Arial", 14), bd=10, relief="sunken", justify="right")
-        entry.pack(fill="both", padx=20, pady=20)
-
-        # Calculator Buttons
-        buttons = [
-            "7", "8", "9", "/",
-            "4", "5", "6", "*",
-            "1", "2", "3", "-",
-            "C", "0", "=", "+"
-        ]
-        button_frame = tk.Frame(self.content_frame)
-        button_frame.pack()
-
-        for button in buttons:
-            btn = tk.Button(button_frame, text=button, command=lambda button=button: press_button(button) if button != "=" else calculate_result())
-            btn.grid(row=buttons.index(button)//4, column=buttons.index(button)%4, sticky="nsew", padx=5, pady=5)
-
-        # Make buttons resize dynamically
-        for i in range(4):
-            button_frame.grid_columnconfigure(i, weight=1)
-            button_frame.grid_rowconfigure(i, weight=1)
-
-    def create_settings(self):
-        settings_label = tk.Label(self.content_frame, text="Settings will go here", bg="white", font=("Arial", 16))
-        settings_label.pack(padx=10, pady=10)
-
-    def start_move(self, event):
-        self.x = event.x
-        self.y = event.y
-
-    def on_move(self, event):
-        deltax = event.x - self.x
-        deltay = event.y - self.y
-        new_x = self.winfo_x() + deltax
-        new_y = self.winfo_y() + deltay
-        self.geometry(f"+{new_x}+{new_y}")
-
-    def minimize_window(self):
-        self.withdraw()
-        self.is_minimized = True
-        taskbar_button = tk.Button(self.master, text=self.title(), command=self.restore_window, width=15, relief="flat")
-        taskbar_button.place(x=10 + len(self.master.windows) * 120, y=745)
-        self.master.windows.append(taskbar_button)
-
-    def restore_window(self):
-        if self.is_minimized:
-            self.deiconify()
-            self.is_minimized = False
-            for button in self.master.windows:
-                button.destroy()
-            self.master.windows.clear()
-
-    def close_window(self):
-        self.destroy()
-
-
-if __name__ == "__main__":
-    app = WindowSimulator()
-    app.mainloop()
+</body>
+</html>
