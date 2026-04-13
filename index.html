@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fake Crash</title>
+  <title>Chrash</title>
   <style>
     body {
       display: flex;
@@ -46,7 +46,7 @@
 </head>
 <body>
 
-<button onclick="startCrash()">Click me</button>
+<button onclick="startCrash()">chrash button</button>
 
 <script>
   function startCrash() {
@@ -64,12 +64,12 @@
       </div>
     `;
 
-    // After 3 seconds, turn black
+    // After 7 seconds, turn black
     setTimeout(() => {
       document.body.innerHTML = `
         <div class="black-screen"></div>
       `;
-    }, 3000);
+    }, 7000);
   }
 </script>
 
