@@ -3,32 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Windows 11 Simulator</title>
+  <title>Realistic Windows 11 Simulator</title>
   <style>
+    /* Global Styles */
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f0f0f0;
-      height: 100vh;
+      background-color: #1e1e1e;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden;
     }
 
+    /* Taskbar */
     #taskbar {
-      background-color: #2d2d30;
-      height: 40px;
+      background-color: #2f2f2f;
+      height: 50px;
       display: flex;
       align-items: center;
       padding-left: 10px;
+      padding-right: 10px;
+      justify-content: space-between;
       color: white;
       position: fixed;
       bottom: 0;
       width: 100%;
-      z-index: 10;
+      z-index: 999;
     }
 
+    /* Taskbar Start Button */
     #startButton {
       background-color: #3e3e42;
       border: none;
@@ -36,74 +42,120 @@
       font-size: 16px;
       cursor: pointer;
       padding: 8px 12px;
+      border-radius: 5px;
     }
 
+    /* Taskbar icons */
     #taskbarIcons {
       display: flex;
-      margin-left: 20px;
+      align-items: center;
     }
 
-    button {
-      padding: 8px 15px;
-      margin: 5px;
+    .taskbar-icon {
+      margin-left: 10px;
+      padding: 10px;
       background-color: #3e3e42;
-      color: white;
-      border: none;
+      border-radius: 5px;
       cursor: pointer;
-      font-size: 14px;
+      transition: background-color 0.3s;
     }
 
-    button:hover {
-      background-color: #575757;
+    .taskbar-icon:hover {
+      background-color: #5f5f5f;
     }
 
+    /* Start Menu */
     #startMenu {
       background-color: #1a1a1a;
       position: absolute;
-      top: 45px;
+      top: 60px;
       left: 10px;
-      width: 200px;
-      padding: 10px;
+      width: 220px;
+      padding: 15px;
       color: white;
-      border-radius: 5px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-      z-index: 20;
+      border-radius: 8px;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+      z-index: 999;
     }
 
     #startMenu.hidden {
       display: none;
     }
 
-    .window {
-      width: 400px;
-      height: 300px;
-      background-color: white;
-      border: 1px solid #ccc;
+    #startMenu button {
+      background: none;
+      border: none;
+      color: white;
+      text-align: left;
+      width: 100%;
+      padding: 10px;
+      cursor: pointer;
       border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    #startMenu button:hover {
+      background-color: #2b2b2b;
+    }
+
+    /* Windows (draggable, resizable) */
+    .window {
+      width: 450px;
+      height: 300px;
+      background-color: #fff;
+      border-radius: 8px;
       position: absolute;
       top: 100px;
       left: 100px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      z-index: 5;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      transition: all 0.3s ease;
     }
 
-    .window .header {
+    .window-header {
       background-color: #3e3e42;
       color: white;
       padding: 10px;
-      cursor: move;
+      cursor: grab;
       user-select: none;
-      border-top-left-radius: 5px;
-      border-top-right-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
     }
 
-    .window .content {
+    .window-content {
       padding: 15px;
     }
 
-    .hidden {
+    .window-controls button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .window-controls button:hover {
+      color: #aaa;
+    }
+
+    .minimized {
       display: none;
     }
+
+    /* Window resize functionality */
+    .resize-handle {
+      background-color: #2f2f2f;
+      width: 16px;
+      height: 16px;
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      cursor: nwse-resize;
+    }
+
   </style>
 </head>
 <body>
@@ -121,20 +173,20 @@
     <button onclick="openApp('Settings')">Settings</button>
   </div>
 
-  <!-- Container for windows -->
+  <!-- Window Container -->
   <div id="windowContainer"></div>
 
   <script>
     let windows = [];
     let minimizedWindows = [];
 
-    // Toggle Start Menu
+    // Toggle Start Menu visibility
     function toggleStartMenu() {
       const startMenu = document.getElementById('startMenu');
       startMenu.classList.toggle('hidden');
     }
 
-    // Open an app
+    // Open an app (create a new window)
     function openApp(appName) {
       createWindow(appName);
       toggleStartMenu();
@@ -143,56 +195,66 @@
     // Create a new window
     function createWindow(appName) {
       const windowContainer = document.getElementById('windowContainer');
-      
-      // Create window
       const window = document.createElement('div');
       window.classList.add('window');
       window.setAttribute('id', appName + 'Window');
-      
-      // Header (moveable area)
-      const header = document.createElement('div');
-      header.classList.add('header');
-      header.innerText = appName;
-      window.appendChild(header);
 
-      // Content area
-      const content = document.createElement('div');
-      content.classList.add('content');
-      content.innerHTML = `<h3>${appName} App</h3><p>This is a simple ${appName} window.</p>`;
-      window.appendChild(content);
+      // Window header (draggable)
+      const windowHeader = document.createElement('div');
+      windowHeader.classList.add('window-header');
+      windowHeader.innerText = appName;
 
-      // Add window to the container
+      // Window Controls (Minimize, Close)
+      const controls = document.createElement('div');
+      controls.classList.add('window-controls');
+      const minimizeButton = document.createElement('button');
+      minimizeButton.innerText = '_';
+      minimizeButton.onclick = () => minimizeWindow(window);
+      const closeButton = document.createElement('button');
+      closeButton.innerText = 'X';
+      closeButton.onclick = () => closeWindow(window);
+      controls.appendChild(minimizeButton);
+      controls.appendChild(closeButton);
+      windowHeader.appendChild(controls);
+
+      // Window content
+      const windowContent = document.createElement('div');
+      windowContent.classList.add('window-content');
+      windowContent.innerHTML = `<h3>${appName}</h3><p>This is a simple ${appName} app window.</p>`;
+      window.appendChild(windowHeader);
+      window.appendChild(windowContent);
+
+      // Append window to container
       windowContainer.appendChild(window);
-      
-      // Add to taskbar
-      addToTaskbar(appName, window);
 
-      // Make window draggable
+      // Make the window draggable
       makeWindowDraggable(window);
+      makeWindowResizable(window);
 
-      windows.push(window);
+      // Add window icon to taskbar
+      addToTaskbar(appName, window);
     }
 
     // Add app icon to taskbar
     function addToTaskbar(appName, window) {
       const taskbarIcons = document.getElementById('taskbarIcons');
-      
-      const icon = document.createElement('button');
-      icon.innerText = appName;
-      icon.onclick = function() {
+      const icon = document.createElement('div');
+      icon.classList.add('taskbar-icon');
+      icon.innerText = appName[0];
+      icon.onclick = function () {
         bringWindowToFront(window);
       };
       taskbarIcons.appendChild(icon);
     }
 
-    // Bring window to front
+    // Bring window to front (raise z-index)
     function bringWindowToFront(window) {
-      window.style.zIndex = windows.length + 1;
+      window.style.zIndex = windows.length + 10;
     }
 
-    // Make window draggable
+    // Make the window draggable
     function makeWindowDraggable(window) {
-      const header = window.querySelector('.header');
+      const header = window.querySelector('.window-header');
       let isDragging = false;
       let offsetX, offsetY;
 
@@ -200,6 +262,7 @@
         isDragging = true;
         offsetX = e.clientX - window.offsetLeft;
         offsetY = e.clientY - window.offsetTop;
+        window.style.cursor = 'grabbing';
       });
 
       document.addEventListener('mousemove', (e) => {
@@ -211,50 +274,70 @@
 
       document.addEventListener('mouseup', () => {
         isDragging = false;
+        window.style.cursor = 'grab';
       });
     }
 
-    // Minimize window
+    // Minimize window (hide it)
     function minimizeWindow(window) {
-      const taskbarIcons = document.getElementById('taskbarIcons');
-      const icon = document.createElement('button');
-      icon.innerText = window.querySelector('.header').innerText;
-      icon.onclick = function() {
-        restoreWindow(window);
-      };
-      taskbarIcons.appendChild(icon);
       window.style.display = 'none';
-      minimizedWindows.push(window);
+      const taskbarIcons = document.getElementById('taskbarIcons');
+      taskbarIcons.querySelectorAll('.taskbar-icon').forEach(icon => {
+        if (icon.innerText === window.querySelector('.window-header').innerText[0]) {
+          icon.style.backgroundColor = '#888';
+          icon.onclick = function () {
+            restoreWindow(window);
+          };
+        }
+      });
     }
 
     // Restore window from taskbar
     function restoreWindow(window) {
       window.style.display = 'block';
-      minimizedWindows = minimizedWindows.filter(w => w !== window);
+      window.style.zIndex = windows.length + 10;
     }
 
     // Close window
     function closeWindow(window) {
       window.remove();
       const taskbarIcons = document.getElementById('taskbarIcons');
-      taskbarIcons.querySelectorAll('button').forEach(icon => {
-        if (icon.innerText === window.querySelector('.header').innerText) {
+      taskbarIcons.querySelectorAll('.taskbar-icon').forEach(icon => {
+        if (icon.innerText === window.querySelector('.window-header').innerText[0]) {
           icon.remove();
         }
       });
     }
 
-    // Add close and minimize buttons to window
-    function addWindowControls(window) {
-      const closeButton = document.createElement('button');
-      closeButton.innerText = 'X';
-      closeButton.onclick = () => closeWindow(window);
-      window.querySelector('.header').appendChild(closeButton);
+    // Make window resizable
+    function makeWindowResizable(window) {
+      const resizeHandle = document.createElement('div');
+      resizeHandle.classList.add('resize-handle');
+      window.appendChild(resizeHandle);
 
-      const minimizeButton = document.createElement('button');
-      minimizeButton.innerText = '_';
-      minimizeButton.onclick = () => minimizeWindow(window);
-      window.querySelector('.header').appendChild(minimizeButton);
+      let isResizing = false;
+      let startWidth, startHeight, startX, startY;
+
+      resizeHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startWidth = window.offsetWidth;
+        startHeight = window.offsetHeight;
+        startX = e.clientX;
+        startY = e.clientY;
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isResizing) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          window.style.width = `${startWidth + dx}px`;
+          window.style.height = `${startHeight + dy}px`;
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isResizing = false;
+      });
     }
   </script>
 
